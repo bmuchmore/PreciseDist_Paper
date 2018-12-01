@@ -1,0 +1,12 @@
+name: "PreciseDist_Paper"
+title: "PreciseDist Paper"
+description: |
+  PreciseDist Paper
+output_dir: "."
+navbar:
+  right:
+    - text: "Home"
+      href: index.html
+    - text: "About"
+      href: about.html
+output: radix::radix_article
