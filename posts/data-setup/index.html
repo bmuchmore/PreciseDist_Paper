@@ -37,14 +37,20 @@
 <meta property="og:type" content="article"/>
 <meta property="og:description" content="The transformations being applied to the data before analysis"/>
 <meta property="og:url" content="https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup/"/>
+<meta property="og:image" content="https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup/data-setup_files/figure-html5/unnamed-chunk-3-1.png"/>
+<meta property="og:image:width" content="1248"/>
+<meta property="og:image:height" content="768"/>
 <meta property="og:locale" content="en_US"/>
 <meta property="og:site_name" content="PreciseDist Paper"/>
 
 <!--  https://dev.twitter.com/cards/types/summary -->
-<meta property="twitter:card" content="summary"/>
+<meta property="twitter:card" content="summary_large_image"/>
 <meta property="twitter:title" content="PreciseDist Paper: Data Set-Up"/>
 <meta property="twitter:description" content="The transformations being applied to the data before analysis"/>
 <meta property="twitter:url" content="https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup/"/>
+<meta property="twitter:image" content="https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup/data-setup_files/figure-html5/unnamed-chunk-3-1.png"/>
+<meta property="twitter:image:width" content="1248"/>
+<meta property="twitter:image:height" content="768"/>
 
 <!--  https://scholar.google.com/intl/en/scholar/inclusion.html#indexing -->
 <meta name="citation_title" content="PreciseDist Paper: Data Set-Up"/>
@@ -63,7 +69,7 @@
 <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["data-setup_files/bowser-1.9.3/bowser.min.js","data-setup_files/crosstalk-1.0.0/css/crosstalk.css","data-setup_files/crosstalk-1.0.0/js/crosstalk.js","data-setup_files/crosstalk-1.0.0/js/crosstalk.js.map","data-setup_files/crosstalk-1.0.0/js/crosstalk.min.js","data-setup_files/crosstalk-1.0.0/js/crosstalk.min.js.map","data-setup_files/distill-2.2.21/template.v2.js","data-setup_files/figure-html5/unnamed-chunk-1-1.png","data-setup_files/htmlwidgets-1.2/htmlwidgets.js","data-setup_files/jquery-1.11.3/jquery.min.js","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/colourpicker.min.css","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/colourpicker.min.js","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/plotly-htmlwidgets.css","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/plotly-latest.min.js","data-setup_files/plotly-binding-4.7.1/lib/selectize/selectize.bootstrap3.css","data-setup_files/plotly-binding-4.7.1/lib/selectize/selectize.min.js","data-setup_files/plotly-binding-4.7.1/lib/typedarray/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/typedarray/typedarray.min.js","data-setup_files/plotly-binding-4.7.1/plotly.js","data-setup_files/plotly-binding-4.7.1/plotly.yaml","data-setup_files/plotlyjs-1.29.2/LICENSE","data-setup_files/plotlyjs-1.29.2/plotly-htmlwidgets.css","data-setup_files/plotlyjs-1.29.2/plotly-latest.min.js","data-setup_files/typedarray-0.1/LICENSE","data-setup_files/typedarray-0.1/typedarray.min.js","data-setup_files/webcomponents-2.0.0/webcomponents.js"]}
+  {"type":"character","attributes":{},"value":["data-setup_files/bowser-1.9.3/bowser.min.js","data-setup_files/crosstalk-1.0.0/css/crosstalk.css","data-setup_files/crosstalk-1.0.0/js/crosstalk.js","data-setup_files/crosstalk-1.0.0/js/crosstalk.js.map","data-setup_files/crosstalk-1.0.0/js/crosstalk.min.js","data-setup_files/crosstalk-1.0.0/js/crosstalk.min.js.map","data-setup_files/distill-2.2.21/template.v2.js","data-setup_files/figure-html5/unnamed-chunk-1-1.png","data-setup_files/figure-html5/unnamed-chunk-3-1.png","data-setup_files/htmlwidgets-1.2/htmlwidgets.js","data-setup_files/jquery-1.11.3/jquery.min.js","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/colourpicker.min.css","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/colourpicker.min.js","data-setup_files/plotly-binding-4.7.1/lib/colourpicker/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/plotly-htmlwidgets.css","data-setup_files/plotly-binding-4.7.1/lib/plotlyjs/plotly-latest.min.js","data-setup_files/plotly-binding-4.7.1/lib/selectize/selectize.bootstrap3.css","data-setup_files/plotly-binding-4.7.1/lib/selectize/selectize.min.js","data-setup_files/plotly-binding-4.7.1/lib/typedarray/LICENSE","data-setup_files/plotly-binding-4.7.1/lib/typedarray/typedarray.min.js","data-setup_files/plotly-binding-4.7.1/plotly.js","data-setup_files/plotly-binding-4.7.1/plotly.yaml","data-setup_files/plotlyjs-1.29.2/LICENSE","data-setup_files/plotlyjs-1.29.2/plotly-htmlwidgets.css","data-setup_files/plotlyjs-1.29.2/plotly-latest.min.js","data-setup_files/typedarray-0.1/LICENSE","data-setup_files/typedarray-0.1/typedarray.min.js","data-setup_files/webcomponents-2.0.0/webcomponents.js"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
 
@@ -1432,10 +1438,10 @@ library(missRanger)</code></pre>
 <p>This is the session info:</p>
 <div class="layout-chunk" data-layout="l-body">
 <pre class="r"><code>
-x &lt;- carbon$new()
-x &lt;- carbon$new(sessionInfo())
-x$download_path &lt;- file.path(&quot;/home/Downloads&quot;)
-x$carbonate(file = &quot;session_info.png&quot;)</code></pre>
+sessionInfo()</code></pre>
+</div>
+<div class="layout-chunk" data-layout="l-body-outset">
+<p><img src="data-setup_files/figure-html5/unnamed-chunk-3-1.png" width="624" data-radix-preview=1 /></p>
 </div>
 <h2 id="general-data-manipulations">General Data Manipulations</h2>
 <p>First we load the clinical data. All of the data I use was taken directly from <a href="https://transmart.quartzbio.com/transmart/login/auth">tranSMART</a>.</p>

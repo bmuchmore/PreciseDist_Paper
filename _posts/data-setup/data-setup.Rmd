@@ -24,19 +24,23 @@ library(tidyverse)
 library(missRanger)
 ```
 
-This is the session info:    
+This is the session info.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-
-
-x <- carbon$new()
-x <- carbon$new(sessionInfo())
-x$download_path <- file.path("/home/Downloads")
-x$carbonate(file = "session_info.png")
+sessionInfo()
 ```
 
+```{r preview = TRUE, layout="l-body-outset", eval = TRUE, include = TRUE, echo = FALSE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+library(png)
+library(RCurl)
+library(ggplot2)
+my_image <- readPNG(getURLContent("https://raw.githubusercontent.com/bmuchmore/PreciseDist_Paper/master/images/session_info.png"))
+ggplot(data.frame()) + annotation_raster(my_image, -Inf, Inf, -Inf, Inf)
+```
+
+
 ```{r eval = FALSE, include = FALSE}
-## Tried to get the following to work to automatically capture the output of seesion info, but alas, could  not.
+## Tried to get the following to work to automatically capture the output of session info, but alas, could  not.
 ## Leaving here for self-posterity
 library(carbonate)
 library(RSelenium)
@@ -46,6 +50,7 @@ x$download_path <- file.path("/home/Downloads/test")
 x$carbonate(file = "session_info.png")
 x$stop_all()
 ```
+
 ## General Data Manipulations    
 
 First we load the clinical data. All of the data I use was taken directly from [tranSMART](https://transmart.quartzbio.com/transmart/login/auth).    

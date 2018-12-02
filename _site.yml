@@ -23,7 +23,7 @@ navbar:
     - text: "Paper"
       href: paper.html
     - text: "R package"
-      href: https://bmuchmore.github.io/PreciseDist/
+      href: https://bmuchmore.github.io/PreciseDist/ 
     - icon: fa fa-rss
       href: index.xml
     - icon: fab fa-github
@@ -38,12 +38,6 @@ collections:
 output: 
   radix::radix_article:
     css: styles.css
-
-
-
-
-
-
 
 
 
