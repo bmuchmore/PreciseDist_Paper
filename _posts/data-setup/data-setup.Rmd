@@ -4,7 +4,6 @@ title: "Data Set-Up"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 description: |
   The transformations being applied to the data before analysis
-preview: images/data_setup_preview.png
 author:
   - name: "Brian Muchmore"
     url: https://github.com/bmuchmore
@@ -15,7 +14,7 @@ output:
     self_contained: false
 ---
 
-
+## Package Information    
 
 These are the packages I will be using.
 
@@ -28,9 +27,25 @@ library(missRanger)
 This is the session info:    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-sessionInfo()
+
+
+x <- carbon$new()
+x <- carbon$new(sessionInfo())
+x$download_path <- file.path("/home/Downloads")
+x$carbonate(file = "session_info.png")
 ```
 
+```{r eval = FALSE, include = FALSE}
+## Tried to get the following to work to automatically capture the output of seesion info, but alas, could  not.
+## Leaving here for self-posterity
+library(carbonate)
+library(RSelenium)
+x <- carbon$new()
+x <- carbon$new(sessionInfo())
+x$download_path <- file.path("/home/Downloads/test")
+x$carbonate(file = "session_info.png")
+x$stop_all()
+```
 ## General Data Manipulations    
 
 First we load the clinical data. All of the data I use was taken directly from [tranSMART](https://transmart.quartzbio.com/transmart/login/auth).    
@@ -39,7 +54,7 @@ First we load the clinical data. All of the data I use was taken directly from [
 data <- read_tsv("/home/brian/Desktop/flow/data_clinical.tsv")
 ```
 
-The column names of the data are in a terrible format for R data analysis, so we make them more amenable.    
+The column names of the data are in a terrible format for R analysis, so we make them more amenable.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 colnames(data) <- tolower(colnames(data))
@@ -78,12 +93,14 @@ clinical_filter_data <- data %>%
   )
 ```
 
-We just filtered our clinical data for columns that don't make sense to include downstream. For example, when we try to predict our unsupervised clusters later with the clinical data to look for associations, it makes no sense to include something like the patient ID, which is guaranteed to be unique for every patient. Now we will filter columns according to the percentage of missing data. In this case, we keep all columns with 10% or less missing data.    
+We just filtered our clinical data for columns that don't make sense to include downstream. For example, when we try to predict our unsupervised clusters later with the clinical data to look for associations, it makes no sense to include something like the patient ID, which is guaranteed to be unique for every patient. Now we will filter columns according to the percentage of missing data. In this case, we keep all columns with 10% or less missing data. Note that this code will mostly toss sub-study columns that of course have more than 10% of their data missing.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_filtered_data <- clinical_filter_data[, colMeans(is.na(clinical_filter_data)) <= 0.89]
 ```
   
+At this point, it would be nice to get a sense for which columns are left and what data-types exist in the data.    
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_filtered_colnames <- colnames(clinical_filtered_data) %>%
   as_tibble() %>%
@@ -93,10 +110,14 @@ clinical_filtered_coltypes <- map(clinical_filtered_data, typeof) %>%
   unlist()
 ```
 
+We have character and numeric columns, but we need the character columns to be of type factor for some downstream algorithms, so first we split out all of the character columns and then we mutate all character columns into factor columns.    
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_factor_data <- select_if(clinical_filtered_data, is.character) %>%
   mutate_if(is.character, as.factor)
 ```
+
+Even though we filtered columns with more than 10% missing data, we still have some missing data, so we will impute all of the now-factor columns.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_factor_imputed_data <- clinical_factor_data %>%
@@ -112,11 +133,10 @@ clinical_factor_imputed_data <- clinical_factor_data %>%
 write_rds(clinical_factor_imputed_data, "/home/brian/Desktop/flow/clinical_factor_imputed_data.rds")
 ```
 
-```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-clinical_numeric_data <- select_if(clinical_filtered_data, is.numeric)
-```
+We don't need to change numeric columns to a different type, but we do need to impute them, so we split out all of the numeric columns and impute.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_numeric_data <- select_if(clinical_filtered_data, is.numeric)
 clinical_numeric_imputed_data <- clinical_numeric_data %>%
   missRanger(
     maxiter = 10L,
@@ -130,10 +150,14 @@ clinical_numeric_imputed_data <- clinical_numeric_data %>%
 write_rds(clinical_numeric_imputed_data, "/home/brian/Desktop/flow/clinical_numeric_imputed_data.rds")
 ```
 
+Now that we have the clinical data in the correct format without any missing data, we recombine the data and make sure that all the NAs are gone.    
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_imputed_data <- cbind(clinical_factor_imputed_data, clinical_numeric_imputed_data)
 anyNA(clinical_imputed_data)
 ```
+
+The final step is to remove columns with either zero or little variance within them because they are unlikely to provide us with much useful information.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 vars <- colnames(clinical_imputed_data)
@@ -146,9 +170,7 @@ clinical_transformed_data <- clinical_imputed_data %>%
   bake(newdata = clinical_imputed_data)
 ```
 
-Note that most of the columns we just got rid of were sub-study columns that of course had more than 10% of their data missing.    
-
-Now we seperate the data into case-only and control-only data. The data already contains both case and control data, but we also assign it to a new R object to keep the naming conventions similar.  
+Now we seperate the data into case-only and control-only data. The **clinical_transformed_data** already contains both case and control data, but we also assign it to a new R object to keep the naming conventions similar.  
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_case_data <- clinical_transformed_data %>%
@@ -160,6 +182,8 @@ clinical_case_control_data <- clinical_transformed_data
 
 ## Flow Cytometry Data Manipulations    
 
+Now we will manipulate the flow cytometry data to put it into a more ammenable form for data analysis. First, we split out the flow cytometry data as a whole, and then all the columns that refer to panel 1 and panel 2, which are the only panels that were run for every patient in the study.   
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_data <- data %>%
   select(clinical_diagnosis_arm, contains("flow_cyto")) %>%
@@ -167,6 +191,8 @@ flow_data <- data %>%
 colnames(flow_data) <- gsub("flow_cytometry_p1_", "", colnames(flow_data))
 colnames(flow_data) <- gsub("flow_cytometry_p2_", "", colnames(flow_data))
 ```
+
+The data has very few missing values in it, but there are a few, so we impute those.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_imputed_data <- flow_data %>%
@@ -182,6 +208,8 @@ flow_imputed_data <- flow_data %>%
 write_rds(flow_imputed_data, "/home/brian/Desktop/flow/flow_imputed_data.rds")
 ```
 
+Now we will transform the data. The transformations done here, for example, removing zero-variance columns and applying a Yeo-Johnson normalizing transformation are done partly on a trial-and-error basis.    
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 vars <- colnames(flow_imputed_data)
 roles <- rep("predictor", length(vars))
@@ -196,6 +224,8 @@ flow_transformed_data <- flow_imputed_data %>%
   cbind(select(flow_data, clinical_diagnosis_arm)) %>%
   select(clinical_diagnosis_arm, everything())
 ```
+
+Lastly, we will seperate the data into case-only and control-only data. The **flow_transformed_data** already contains both case and control data, but we also assign it to a new R object to keep the naming conventions similar.  
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_data <- flow_transformed_data %>%

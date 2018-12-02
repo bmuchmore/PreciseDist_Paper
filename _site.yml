@@ -7,7 +7,7 @@ output_dir: "."
 base_url: https://bmuchmore.github.io/PreciseDist_Paper/
 preview: images/package_sticker.png
 repository_url: https://github.com/bmuchmore/PreciseDist_Paper
-google_analytics: "UA-122112532-3"
+google_analytics: "UA-130203054-1"
 creative_commons: CC BY
 exclude: ["README.markdown", "LICENSE"]
 navbar:
@@ -24,6 +24,8 @@ navbar:
       href: paper.html
     - text: "R package"
       href: https://bmuchmore.github.io/PreciseDist/
+    - icon: fa fa-rss
+      href: index.xml
     - icon: fab fa-github
       href: https://github.com/bmuchmore/PreciseDist_Paper
 collections:
@@ -36,3 +38,19 @@ collections:
 output: 
   radix::radix_article:
     css: styles.css
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
