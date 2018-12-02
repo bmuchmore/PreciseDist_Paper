@@ -1,12 +1,38 @@
 name: "PreciseDist_Paper"
 title: "PreciseDist Paper"
+favicon: images/package_sticker.png
 description: |
   PreciseDist Paper
 output_dir: "."
+base_url: https://bmuchmore.github.io/PreciseDist_Paper/
+preview: images/package_sticker.png
+repository_url: https://github.com/bmuchmore/PreciseDist_Paper
+google_analytics: "UA-122112532-3"
+creative_commons: CC BY
+exclude: ["README.markdown", "LICENSE"]
 navbar:
+  title: "" 
+  logo:
+    image: images/package_sticker.png
+    href: index.html
   right:
     - text: "Home"
       href: index.html
     - text: "About"
       href: about.html
-output: radix::radix_article
+    - text: "Paper"
+      href: paper.html
+    - text: "R package"
+      href: https://bmuchmore.github.io/PreciseDist/
+    - icon: fab fa-github
+      href: https://github.com/bmuchmore/PreciseDist_Paper
+collections:
+  posts:
+    feed_items_max: 50
+    disqus: 
+      shortname: precisedist-paper
+      hidden: true
+    share: [facebook, twitter, linkedin, google-plus]
+output: 
+  radix::radix_article:
+    css: styles.css

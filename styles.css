@@ -1,0 +1,73 @@
+.radix-site-nav {
+  color: white;
+  background-color: #5f6a72;
+  font-size: 18px;
+  font-weight: 300;
+}
+
+.radix-site-nav a {
+  color: white;
+  text-decoration: none;
+}
+
+.radix-site-nav a:hover {
+  color: #cc0033;
+}
+
+.radix-site-header {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 2px;
+}
+
+.radix-site-footer {
+  background-color: white;
+  padding: 0;
+  color: black;
+}
+
+.radix-site-footer a {
+  color: black;
+  text-decoration: none;
+}
+
+@media print {
+  .radix-site-nav {
+    display: none;
+  }
+}
+
+
+/*Brian, your additions*/
+
+.nav-dropdown {
+  color: white;
+  text-decoration: none;
+}
+
+.nav-dropdown a:hover {
+  color: #cc0033;
+}
+
+.nav-dropdown-content {
+  color: #5f6a72;
+  background-color: #5f6a72;
+}
+
+.nav-dropdown-content a:hover {
+  color: #cc0033;
+  background-color: #5f6a72;
+}
+
+.radix-site-header .logo img {
+  display: inline-block;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  max-height: 50px;
+  width: auto;
+  margin-bottom: 5px;
+  padding-right: 5px;
+  vertical-align: bottom;
+}
+
+

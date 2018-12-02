@@ -1,5 +1,7 @@
 ---
 title: "PreciseDist Paper"
 site: radix::radix_website
-listing: posts
+listing:
+  posts:
+    - data-setup
 ---

@@ -19,29 +19,31 @@
  <!--/radix_placeholder_import_source-->
 
   <!--radix_placeholder_meta_tags-->
-  <title>PreciseDist Paper: About this blog</title>
+  <title>PreciseDist Paper: About this site</title>
   
-  <meta property="description" itemprop="description" content="Some additional details about the blog"/>
+  <meta property="description" itemprop="description" content="This is the website for the paper, &quot;PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.&quot;"/>
   
+  <link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
+  <link rel="icon" type="image/png" href="images/package_sticker.png"/>
   
   
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
-  <meta property="og:title" content="PreciseDist Paper: About this blog"/>
+  <meta property="og:title" content="PreciseDist Paper: About this site"/>
   <meta property="og:type" content="article"/>
-  <meta property="og:description" content="Some additional details about the blog"/>
+  <meta property="og:description" content="This is the website for the paper, &quot;PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.&quot;"/>
   <meta property="og:locale" content="en_US"/>
   <meta property="og:site_name" content="PreciseDist Paper"/>
   
   <!--  https://dev.twitter.com/cards/types/summary -->
   <meta property="twitter:card" content="summary"/>
-  <meta property="twitter:title" content="PreciseDist Paper: About this blog"/>
-  <meta property="twitter:description" content="Some additional details about the blog"/>
+  <meta property="twitter:title" content="PreciseDist Paper: About this site"/>
+  <meta property="twitter:description" content="This is the website for the paper, &quot;PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.&quot;"/>
   
   <!--/radix_placeholder_meta_tags-->
   <!--radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description"]}},"value":[{"type":"character","attributes":{},"value":["About this blog"]},{"type":"character","attributes":{},"value":["Some additional details about the blog"]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description"]}},"value":[{"type":"character","attributes":{},"value":["About this site"]},{"type":"character","attributes":{},"value":["This is the website for the paper, \"PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.\""]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   <!--radix_placeholder_navigation_in_header-->
@@ -1263,8 +1265,92 @@
   <script src="site_libs/webcomponents-2.0.0/webcomponents.js"></script>
   <script src="site_libs/distill-2.2.21/template.v2.js"></script>
   <!--radix_placeholder_site_in_header-->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-122112532-3"></script>
+  <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-122112532-3');
+  </script>
+  <style type="text/css">
+  .radix-site-nav {
+    color: white;
+    background-color: #5f6a72;
+    font-size: 18px;
+    font-weight: 300;
+  }
+  
+  .radix-site-nav a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .radix-site-nav a:hover {
+    color: #cc0033;
+  }
+  
+  .radix-site-header {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 2px;
+  }
+  
+  .radix-site-footer {
+    background-color: white;
+    padding: 0;
+    color: black;
+  }
+  
+  .radix-site-footer a {
+    color: black;
+    text-decoration: none;
+  }
+  
+  @media print {
+    .radix-site-nav {
+      display: none;
+    }
+  }
+  
+  
+  /*Brian, your additions*/
+  
+  .nav-dropdown {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .nav-dropdown a:hover {
+    color: #cc0033;
+  }
+  
+  .nav-dropdown-content {
+    color: #5f6a72;
+    background-color: #5f6a72;
+  }
+  
+  .nav-dropdown-content a:hover {
+    color: #cc0033;
+    background-color: #5f6a72;
+  }
+  
+  .radix-site-header .logo img {
+    display: inline-block;
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    max-height: 50px;
+    width: auto;
+    margin-bottom: 5px;
+    padding-right: 5px;
+    vertical-align: bottom;
+  }
+  
+  
+  
+  </style>
   <!--/radix_placeholder_site_in_header-->
 
+  <link rel="stylesheet" href="styles.css" type="text/css"/>
 
 </head>
 
@@ -1273,7 +1359,7 @@
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"About this blog","description":"Some additional details about the blog","authors":[]}
+{"title":"About this site","description":"This is the website for the paper, \"PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.\"","authors":[]}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -1281,11 +1367,19 @@
 <header class="header header--fixed" role="banner">
 <nav class="radix-site-nav radix-site-header">
 <div class="nav-left">
-<a href="index.html" class="title">PreciseDist Paper</a>
+<a class="logo" href="index.html">
+<img src="images/package_sticker.png"/>
+</a>
+<a href="index.html" class="title"></a>
 </div>
 <div class="nav-right">
 <a href="index.html">Home</a>
 <a href="about.html">About</a>
+<a href="paper.html">Paper</a>
+<a href="https://bmuchmore.github.io/PreciseDist/">R package</a>
+<a href="https://github.com/bmuchmore/PreciseDist_Paper">
+<i class="fab fa-github"></i>
+</a>
 <a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
 </div>
 </nav>
@@ -1295,13 +1389,15 @@
 <!--/radix_placeholder_site_before_body-->
 
 <div class="d-title">
-<h1>About this blog</h1>
-<p>Some additional details about the blog</p>
+<h1>About this site</h1>
+<p>This is the website for the paper, “PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization.”</p>
 </div>
 
 
 <div class="d-article">
-
+<p>While this website contains code examples of PreciseDist based on the analysis of flow cytometry data in the context of systemic autoimmune diseases, this is the PreciseDist package website.</p>
+<p>Please visit the following website for comprehensive code-examples of PreciseDist in action:</p>
+<p><a href="https://github.com/bmuchmore/PreciseDist" class="uri">https://github.com/bmuchmore/PreciseDist</a></p>
 <!--radix_placeholder_article_footer-->
 <!--/radix_placeholder_article_footer-->
 </div>
@@ -1313,9 +1409,19 @@
 <!--radix_placeholder_site_after_body-->
 <!--/radix_placeholder_site_after_body-->
 <!--radix_placeholder_appendices-->
-<div class="appendix-bottom"></div>
+<div class="appendix-bottom">
+<h3 id="updates-and-corrections">Corrections</h3>
+<p>If you see mistakes or want to suggest changes, please <a href="https://github.com/bmuchmore/PreciseDist_Paper/issues/new">create an issue</a> on the source repository.</p>
+<h3 id="reuse">Reuse</h3>
+<p>Text and figures are licensed under Creative Commons Attribution <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Source code is available at <a href="https://github.com/bmuchmore/PreciseDist_Paper">https://github.com/bmuchmore/PreciseDist_Paper</a>, unless otherwise noted. The figures that have been reused from other sources don't fall under this license and can be recognized by a note in their caption: "Figure from ...".</p>
+</div>
 <!--/radix_placeholder_appendices-->
 <!--radix_placeholder_navigation_after_body-->
+<div class="radix-site-nav radix-site-footer">
+<p><img width="125px" src="./images/package_sticker.png"/><br />
+© Copyright 2018<br />
+<a href="https://github.com/bmuchmore">Brian Muchmore</a></p>
+</div>
 <!--/radix_placeholder_navigation_after_body-->
 
 </body>

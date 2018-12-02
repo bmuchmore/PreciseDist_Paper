@@ -1,0 +1,212 @@
+---
+draft: false
+title: "Data Set-Up"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+description: |
+  The transformations being applied to the data before analysis
+preview: images/data_setup_preview.png
+author:
+  - name: "Brian Muchmore"
+    url: https://github.com/bmuchmore
+    affiliation: GENYO
+    affiliation_url: http://www.genyo.es/
+output:
+  radix::radix_article:
+    self_contained: false
+---
+
+
+
+These are the packages I will be using.
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+library(PreciseDist)
+library(tidyverse)
+library(missRanger)
+```
+
+This is the session info:    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+sessionInfo()
+```
+
+## General Data Manipulations    
+
+First we load the clinical data. All of the data I use was taken directly from [tranSMART](https://transmart.quartzbio.com/transmart/login/auth).    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+data <- read_tsv("/home/brian/Desktop/flow/data_clinical.tsv")
+```
+
+The column names of the data are in a terrible format for R data analysis, so we make them more amenable.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+colnames(data) <- tolower(colnames(data))
+colnames(data) <- gsub("[[:space:]]", "_", colnames(data))
+colnames(data) <- gsub("\\", "_", colnames(data), fixed = TRUE)
+colnames(data) <- gsub("_$", "", colnames(data))
+colnames(data) <- gsub("^_", "", colnames(data))
+colnames(data) <- gsub("cross_sectional_low_dimensional_data_", "", colnames(data))
+colnames(data) <- gsub("\\(", "", colnames(data))
+colnames(data) <- gsub("\\)", "", colnames(data))
+colnames(data) <- gsub("\\'", "", colnames(data))
+colnames(data) <- gsub(">=", "greater_equal", colnames(data))
+colnames(data) <- gsub("<=", "lesser_equal", colnames(data))
+colnames(data) <- gsub("=", "equal", colnames(data))
+colnames(data) <- gsub("==", "equal", colnames(data))
+colnames(data) <- gsub("[[:punct:]]", "_", colnames(data))
+colnames(data) <- gsub("^\\s+|\\s+$", "", colnames(data))
+```
+
+## Clinical Data Manipulations    
+
+At this point, we will get rid of various columns in the data to leave us with the pertinent clinical, HLA, luminex, metabolomic, sub-study and auto-antibody data. We will use this data downstream as descriptor data to label (e.g. color code) our clusters, and also as the input data into supervised learning algorithms to see if we can predict our clusters. This will become more clear later.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_filter_data <- data %>%
+  select(-contains("flow_cyto")) %>%
+  select(
+    -clinical_consent_informed_consent_date_1,
+    -clinical_consent_cs_phase,
+    -clinical_diagnosis_arm_code,
+    -clinical_sampling_patient_id,
+    -clinical_sampling_omic_number,
+    -subject_id,
+    -metabolomics_plasmanmr_wilmut_id,
+    -metabolomics_plasmanmr_x1_31903
+  )
+```
+
+We just filtered our clinical data for columns that don't make sense to include downstream. For example, when we try to predict our unsupervised clusters later with the clinical data to look for associations, it makes no sense to include something like the patient ID, which is guaranteed to be unique for every patient. Now we will filter columns according to the percentage of missing data. In this case, we keep all columns with 10% or less missing data.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_filtered_data <- clinical_filter_data[, colMeans(is.na(clinical_filter_data)) <= 0.89]
+```
+  
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_filtered_colnames <- colnames(clinical_filtered_data) %>%
+  as_tibble() %>%
+  select(clinical_colnames = value)
+clinical_filtered_coltypes <- map(clinical_filtered_data, typeof) %>%
+  unique() %>%
+  unlist()
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_factor_data <- select_if(clinical_filtered_data, is.character) %>%
+  mutate_if(is.character, as.factor)
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_factor_imputed_data <- clinical_factor_data %>%
+  missRanger(
+    maxiter = 10L,
+    pmm.k = 5,
+    seed = NULL,
+    num.trees = 500,
+    mtry = NULL,
+    num.threads = 16
+  )
+
+write_rds(clinical_factor_imputed_data, "/home/brian/Desktop/flow/clinical_factor_imputed_data.rds")
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_numeric_data <- select_if(clinical_filtered_data, is.numeric)
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_numeric_imputed_data <- clinical_numeric_data %>%
+  missRanger(
+    maxiter = 10L,
+    pmm.k = 5,
+    seed = NULL,
+    num.trees = 500,
+    mtry = NULL,
+    num.threads = 16
+  )
+
+write_rds(clinical_numeric_imputed_data, "/home/brian/Desktop/flow/clinical_numeric_imputed_data.rds")
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_imputed_data <- cbind(clinical_factor_imputed_data, clinical_numeric_imputed_data)
+anyNA(clinical_imputed_data)
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+vars <- colnames(clinical_imputed_data)
+roles <- rep("predictor", length(vars))
+clinical_transformed_data <- clinical_imputed_data %>%
+  recipe(vars = vars, roles = roles) %>%
+  step_zv(all_predictors()) %>%
+  step_nzv(all_predictors()) %>%
+  prep() %>%
+  bake(newdata = clinical_imputed_data)
+```
+
+Note that most of the columns we just got rid of were sub-study columns that of course had more than 10% of their data missing.    
+
+Now we seperate the data into case-only and control-only data. The data already contains both case and control data, but we also assign it to a new R object to keep the naming conventions similar.  
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_case_data <- clinical_transformed_data %>%
+  filter(clinical_diagnosis_arm == "Case")
+clinical_control_data <- clinical_transformed_data %>%
+  filter(clinical_diagnosis_arm == "Control")
+clinical_case_control_data <- clinical_transformed_data
+```
+
+## Flow Cytometry Data Manipulations    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_data <- data %>%
+  select(clinical_diagnosis_arm, contains("flow_cyto")) %>%
+  select(clinical_diagnosis_arm, contains("p1"), contains("p2"))
+colnames(flow_data) <- gsub("flow_cytometry_p1_", "", colnames(flow_data))
+colnames(flow_data) <- gsub("flow_cytometry_p2_", "", colnames(flow_data))
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_imputed_data <- flow_data %>%
+  select(-clinical_diagnosis_arm) %>%
+  missRanger(
+    maxiter = 10L,
+    pmm.k = 5,
+    seed = NULL,
+    num.trees = 1501,
+    mtry = NULL,
+    num.threads = 16
+  )
+write_rds(flow_imputed_data, "/home/brian/Desktop/flow/flow_imputed_data.rds")
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+vars <- colnames(flow_imputed_data)
+roles <- rep("predictor", length(vars))
+flow_transformed_data <- flow_imputed_data %>%
+  recipe(vars = vars, roles = roles) %>%
+  step_zv(all_predictors()) %>%
+  step_YeoJohnson(all_predictors()) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors()) %>%
+  prep() %>%
+  bake(newdata = flow_imputed_data) %>%
+  cbind(select(flow_data, clinical_diagnosis_arm)) %>%
+  select(clinical_diagnosis_arm, everything())
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_case_data <- flow_transformed_data %>%
+  filter(clinical_diagnosis_arm == "Case") %>%
+  select(-clinical_diagnosis_arm)
+flow_control_data <- flow_transformed_data %>%
+  filter(clinical_diagnosis_arm == "Control") %>%
+  select(-clinical_diagnosis_arm)
+flow_case_control_data <- flow_transformed_data %>%
+  select(-clinical_diagnosis_arm)
+```
+
+
+

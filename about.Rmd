@@ -1,9 +1,11 @@
 ---
-title: "About this blog"
+title: "About this site"
 description: |
-  Some additional details about the blog
+  This is the website for the paper, "PreciseDist: An Unsupervised Ensemble Learning Framework for Clustering and Visualization."
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-```
+While this website contains code examples of PreciseDist based on the analysis of flow cytometry data in the context of systemic autoimmune diseases, this is the PreciseDist package website.    
+  
+Please visit the following website for comprehensive code-examples of PreciseDist in action:    
+  
+https://github.com/bmuchmore/PreciseDist   

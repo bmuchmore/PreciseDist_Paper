@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>PreciseDist Paper</title>
+    <link>https://bmuchmore.github.io/PreciseDist_Paper/</link>
+    <atom:link href="https://bmuchmore.github.io/PreciseDist_Paper/index.xml" rel="self" type="application/rss+xml"/>
+    <description>PreciseDist Paper
+</description>
+    <image>
+      <title>PreciseDist Paper</title>
+      <url>https://bmuchmore.github.io/PreciseDist_Paper/images/package_sticker.png</url>
+      <link>https://bmuchmore.github.io/PreciseDist_Paper/</link>
+    </image>
+    <generator>Radix</generator>
+    <lastBuildDate>Sat, 01 Dec 2018 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>Data Set-Up</title>
+      <dc:creator>Brian Muchmore</dc:creator>
+      <link>https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup</link>
+      <description>The transformations being applied to the data before analysis</description>
+      <guid>https://bmuchmore.github.io/PreciseDist_Paper/posts/data-setup</guid>
+      <pubDate>Sat, 01 Dec 2018 00:00:00 +0000</pubDate>
+    </item>
+  </channel>
+</rss>
