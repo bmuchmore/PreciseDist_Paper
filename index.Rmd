@@ -4,4 +4,5 @@ site: radix::radix_website
 listing:
   posts:
     - data-setup
+    - cases
 ---
