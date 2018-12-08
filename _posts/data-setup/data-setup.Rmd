@@ -16,7 +16,23 @@ output:
 
 ### NOTE
 
-Given the same data, the following commands should yield almost identical results to the results being shown with any discrepancies being stochastic in nature. Some of these commands, however, can take a long time to run, so while we show the commands here as we originally ran them, results are often being read back from file. If you are trying to recapitulate these results using the exact data and code being used here and are running into problems or incongruitous results, please submit an [issue](https://github.com/bmuchmore/PreciseDist_Paper/issues), and we will address it as soon as possible.    
+Given the same data, the following commands should yield almost identical results to the results being shown with any discrepancies being stochastic in nature. Some of these commands, however, can take a long time to run, so while we show the commands here as we originally ran them, results are often being read back from file. If you are trying to recapitulate these results using the exact data and code being used here and are running into problems or incongruitous results, please submit an [issue](https://github.com/bmuchmore/PreciseDist_Paper/issues), and we will address it as soon as possible.   
+
+## Set-up    
+
+All data analysis was done on a desktop with 8 cores/16 threads (AMD Ryzen 7 1800x) and 32 GB of DDR4 memory. We begin by setting a "cores" variable for future use.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+cores <- 16
+```
+
+This is a general purpose naming function that will be used to generate any paths seen below:    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+name <- function(path = "/home/brian/Desktop/flow", folder = "", file, type = "rds") {
+  paste0(path, "/", folder, "/", file, ".", type)
+}
+```
 
 ## Package Information    
 
@@ -57,24 +73,10 @@ x$stop_all()
 
 ## General Data Manipulations    
 
-All data analysis was done on a desktop with 8 cores/16 threads (AMD Ryzen 7 1800x) and 32 GB of DDR4 memory. We begin by setting a "cores" variable for future use.    
+First, we load the clinical data. The data was downloaded from [tranSMART](https://transmart.quartzbio.com/transmart/login/auth) on December 5th, 2018.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-cores <- 16
-```
-
-This is a general purpose naming function that will be used to generate any paths seen below:    
-
-```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-name <- function(path = "/home/brian/Desktop/flow", folder = "cases", file, type = "rds") {
-  paste0(path, "/", folder, "/", file, ".", type)
-}
-```
-
-Now we load the clinical data. The data was downloaded from [tranSMART](https://transmart.quartzbio.com/transmart/login/auth) on December 5th, 2018.    
-
-```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-data <- read_tsv(name(folder = "", file = "data_clinical", type = ".tsv"))
+data <- read_tsv(name(file = "data_clinical", type = "tsv"))
 ```
 
 The column names of the data are in a terrible format for R analysis, so we make them more amenable.    

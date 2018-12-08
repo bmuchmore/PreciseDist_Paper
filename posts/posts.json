@@ -1,5 +1,20 @@
 [
   {
+    "path": "posts/cases/",
+    "title": "Cases",
+    "description": "The analysis of the case-only data",
+    "author": [
+      {
+        "name": "Brian Muchmore",
+        "url": "https://github.com/bmuchmore"
+      }
+    ],
+    "date": "2018-12-08",
+    "categories": [],
+    "preview": {},
+    "last_modified": "2018-12-08T11:43:49-05:00"
+  },
+  {
     "path": "posts/data-setup/",
     "title": "Data Set-Up",
     "description": "The transformations being applied to the data before analysis",
@@ -15,20 +30,5 @@
     "last_modified": "2018-12-08T09:08:44-05:00",
     "preview_width": 1248,
     "preview_height": 768
-  },
-  {
-    "path": "posts/cases/",
-    "title": "Cases",
-    "description": "The analysis of the case-only data",
-    "author": [
-      {
-        "name": "Brian Muchmore",
-        "url": "https://github.com/bmuchmore"
-      }
-    ],
-    "date": "2018-12-03",
-    "categories": [],
-    "preview": {},
-    "last_modified": "2018-12-03T19:54:43-05:00"
   }
 ]

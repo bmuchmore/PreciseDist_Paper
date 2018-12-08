@@ -18,15 +18,31 @@ output:
 
 Given the same data, the following commands should yield almost identical results to the results being shown with any discrepancies being stochastic in nature. Some of these commands, however, can take a long time to run, so while we show the commands here as we originally ran them, results are often being read back from file. If you are trying to recapitulate these results using the exact data and code being used here and are running into problems or incongruitous results, please submit an [issue](https://github.com/bmuchmore/PreciseDist_Paper/issues), and we will address it as soon as possible.    
 
+## Set-up    
+
+All data analysis was done on a desktop with 8 cores/16 threads (AMD Ryzen 7 1800x) and 32 GB of DDR4 memory. We begin by setting a "cores" variable for future use.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+cores <- 8
+```
+
+This is a general purpose naming function that will be used to generate any paths seen below:    
+
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+name <- function(path = "/home/brian/Desktop/flow", folder = "cases", file, type = "rds") {
+  paste0(path, "/", folder, "/", file, ".", type)
+}
+```
+
 ## Package Information    
 
 These are the packages I will be using.
 
 ```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(PreciseDist)
+library(readr)
 library(future)
 library(doFuture)
-library(readr)
 library(heatmaply)
 ```
 
@@ -36,29 +52,37 @@ This is the session info.
 sessionInfo()
 ```
 
+## Distance Calculations    
+
+The first step is to take our flow case data and calculate as many distances, similarities and correlations as possible. Some of these calculations may take seconds while others may take hours, so we generally run this overnight and then kill the function if it is still running in the morning (if the **file** parameter is set, once a distance finishes it is written to file, so killing the function does not harm already written data).    
+
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(future)
 library(doFuture)
 options(future.globals.maxSize = +Inf)
 registerDoFuture()
-plan(multicore, workers = 16)
-flow_case_dists <- flow_case_data %>%
+plan(multicore, workers = cores)
+flow_case_dists <- flow_cases %>%
   as.matrix() %>%
   precise_dist(
     dists = "all_dists",
     suffix = "",
-    file = "/home/brian/Desktop/flow/flow_case_dists.rds",
+    file = name(file = "flow_case_dists"),
     parallel = TRUE,
     local_timeout = Inf,
     verbose = TRUE
   )
-flow_case_dists <- read_rds("/home/brian/Desktop/flow/flow_case_dists.rds")
 ```
+
+Now we coerce all non-distances (i.e. similarities and correlations) into distances.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_distances <- flow_case_dists %>%
   precise_transform(enforce_dist = TRUE)
 ```
+
+## UMAP Results for Every Distance    
+
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(future)
@@ -81,44 +105,35 @@ flow_case_umap <- precise_umap(
 )
 ```
 
-```{r eval = TRUE, include = FALSE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-flow_case_umap <- read_rds("/home/brian/Desktop/flow/flow_case_umap.rds")
+```{r eval = TRUE, include = FALSE}
+flow_case_umap <- read_rds(name(file = "flow_case_umap"))
 ```
 
 ```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
-precise_trellis(flow_case_umap, path = paste0(getwd(), "/trellis_flow_case_umap"), self_contained = TRUE)
+precise_trellis(
+  data = flow_case_umap, 
+  name = "UMAP of Every Flow Distance",
+  path = name(file = "trellis_flow_case_umap"), 
+  self_contained = TRUE
+)
 ```
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_distance_correlations <- precise_correlations(
   data = flow_case_distances,
   method = "pearson",
-  permutations = 50,
+  permutations = 101,
   parallel = FALSE,
   verbose = TRUE
 )
 ```
 
-```{r eval = TRUE, include = FALSE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-flow_case_distance_correlations <- read_rds("/home/brian/Desktop/flow/flow_case_distance_correlations.rds")
+```{r eval = TRUE, include = FALSE}
+flow_case_distance_correlations <- read_rds(name(file = "flow_case_distance_correlations"))
 ```
 
 ```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
-heatmaply(flow_case_distance_correlations$statistic)
-```
-
-```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-flow_case_soergel_dists <- flow_case_data %>%
-  as.matrix() %>%
-  precise_dist(
-    dists = "soergel",
-    suffix = "",
-    partitions = 10,
-    file = "/home/brian/Desktop/flow/flow_case_soergel_dists.rds",
-    parallel = FALSE,
-    local_timeout = Inf,
-    verbose = TRUE
-  )
+heatmaply_cor(flow_case_distance_correlations$statistic)
 ```
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
@@ -126,12 +141,26 @@ library(future)
 library(doFuture)
 options(future.globals.maxSize = +Inf)
 registerDoFuture()
-plan(multicore, workers = 10)
+plan(multicore, workers = 5)
+flow_case_soergel_dists <- flow_cases %>%
+  as.matrix() %>%
+  precise_dist(
+    dists = "soergel",
+    suffix = "",
+    partitions = 10,
+    file = name(file = "flow_case_soergel_dists"),
+    parallel = TRUE,
+    local_timeout = Inf,
+    verbose = TRUE
+  )
+```
+
+```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_soergel_fusion <- flow_case_soergel_dists %>%
   precise_transform(return_list = TRUE) %>%
   precise_transform(enforce_sim = TRUE) %>%
   precise_transform(fixed_k = 100) %>%
-  precise_transform(transform = "laplacian", parallel = TRUE) %>%
+  precise_transform(transform = "laplacian") %>%
   precise_transform(enforce_dist = TRUE) %>%
   precise_fusion(fusion = "fuse")
 ```
@@ -170,40 +199,54 @@ flow_case_soergel_2d_plot <- precise_viz(
 )
 ```
 
-```{r eval = TRUE, include = FALSE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-flow_case_soergel_2d_plot <- read_rds("/home/brian/Desktop/flow/flow_case_soergel_2d_plot.rds")
+```{r eval = TRUE, include = FALSE}
+flow_case_soergel_2d_plot <- read_rds(name(file = "flow_case_soergel_2d_plot"))
 ```
 
-```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+```{r layout = "l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
 flow_case_soergel_2d_plot$visual_output
 ```
 
+```{r preview = TRUE, layout = "l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = FALSE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+library(png)
+library(RCurl)
+library(ggplot2)
+my_image <- readPNG(getURLContent("https://raw.githubusercontent.com/bmuchmore/PreciseDist_Paper/master/images/session_info.png"))
+ggplot(data.frame()) + annotation_raster(my_image, -Inf, Inf, -Inf, Inf)
+```
+
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-library(cluster)
-flow_case_soergel_clusters <- flow_case_soergel_viz$plot_layout %>%
-  cluster::pam(
-    k = 10,
+library(fpc)
+library(purrr)
+library(tibble)
+flow_case_soergel_clusters <- flow_case_soergel_2d_plot$plot_layout %>%
+  pamk(
+    krange = 2:20,
+    criterion = "asw", 
+    usepam = TRUE,
+    scaling = FALSE, 
+    alpha = 0.001, 
     diss = FALSE,
-    metric = NULL,
-    medoids = NULL,
-    stand = FALSE,
-    cluster.only = TRUE,
-    do.swap = TRUE,
-    keep.diss = FALSE,
-    keep.data = FALSE,
-    pamonce = FALSE,
-    trace.lev = 0
+    critout = FALSE, 
+    ns = 10, 
+    seed = NULL
   ) %>%
+  .[[1]] %>%
+  .[["clustering"]] %>%
   as.character() %>%
   map_chr(~paste0("cluster_", .x)) %>%
   as_tibble() %>%
   select(pam_clusters = value)
 ```
 
+```{r eval = TRUE, include = FALSE}
+flow_case_soergel_clusters <- read_rds(name(file = "flow_case_soergel_clusters"))
+```
+
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_soergel_descriptors <- precise_descriptors(
   flow_case_soergel_2d_plot,
-  descriptors = cbind(flow_case_soergel_clusters, flow_case_data),
+  descriptors = cbind(flow_case_soergel_clusters, flow_cases),
   verbose = TRUE,
   rank = TRUE,
   size = 0.5
@@ -211,32 +254,20 @@ flow_case_soergel_descriptors <- precise_descriptors(
 ```
 
 ```{r eval = TRUE, include = FALSE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-flow_case_soergel_descriptors <- read_rds("/home/brian/Desktop/flow/flow_case_soergel_descriptors.rds")
+flow_case_soergel_descriptors <- read_rds(name(file = "flow_case_soergel_descriptors"))
 ```
 
-```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
-precise_trellis(flow_case_soergel_descriptors, path = paste0(getwd(), "/trellis_flow_case_soergel_descriptors"), self_contained = TRUE)
-```
-
-```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-library(future)
-library(doFuture)
-options(future.globals.maxSize = +Inf)
-registerDoFuture()
-plan(multicore, workers = 16)
-features2 <- precise_features(
-  data = flow_case_data,
-  # data = clinical_data,
-  outcome = flow_case_soergel_clusters,
-  method = c("anova"),
-  trees = 500,
-  runs = 50,
-  # cv = 10,
-  # repeats = 1,
-  parallel = TRUE,
-  verbose = TRUE
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = flow_case_soergel_descriptors, 
+  name = "Flow Columns and Cluster Results Mapped to Visual Results of Fused Soergel Distances",
+  path = name(file = "trellis_flow_case_soergel_descriptors"), 
+  self_contained = TRUE
 )
 ```
+
+
+
 
 
 
