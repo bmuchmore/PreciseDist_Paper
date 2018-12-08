@@ -1,9 +1,9 @@
 ---
 draft: false
-title: "Cases"
+title: "Cases: Distance Calculations and Initial Clusters"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 description: |
-  The analysis of the case-only data
+  Initial analysis and clustering of the case-only data
 author:
   - name: "Brian Muchmore"
     url: https://github.com/bmuchmore
@@ -26,7 +26,7 @@ All data analysis was done on a desktop with 8 cores/16 threads (AMD Ryzen 7 180
 cores <- 8
 ```
 
-This is a general purpose naming function that will be used to generate any paths seen below:    
+Next is a general purpose naming function that will be used to generate any paths seen below:    
 
 ```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 name <- function(path = "/home/brian/Desktop/flow", folder = "cases", file, type = "rds") {
@@ -83,6 +83,7 @@ flow_case_distances <- flow_case_dists %>%
 
 ## UMAP Results for Every Distance    
 
+Now that we have a large list of distances, we can feed each distance as input into the UMAP algorithm.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(future)
@@ -109,6 +110,10 @@ flow_case_umap <- precise_umap(
 flow_case_umap <- read_rds(name(file = "flow_case_umap"))
 ```
 
+Once we have a list of UMAP results, we will feed it to **precise_trellis()**, which will automatically take our list of UMAP results and output a visualization for each result. The point of this is to look for UMAP results that indicate the calculated distance is capturing some amount of intrinsic structure within the data.    
+
+**NOTE: This is an interactive visualization. You can also maximized and minimize it by clicking on the juxtaposed arrows in the bottom right hand corner of the vizualization.**    
+
 ```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
 precise_trellis(
   data = flow_case_umap, 
@@ -117,6 +122,8 @@ precise_trellis(
   self_contained = TRUE
 )
 ```
+
+By scrolling through the various UMAP results, we see that a number of the results look similar, but it is not clear if different distances really are similar or if it just looks that way. To make the results more clear, we will call **precise_correlations()** to create a correlation matrix of distances.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_distance_correlations <- precise_correlations(
@@ -132,9 +139,13 @@ flow_case_distance_correlations <- precise_correlations(
 flow_case_distance_correlations <- read_rds(name(file = "flow_case_distance_correlations"))
 ```
 
+Now that we have the correlations, we can visualize the correlation matrix using **heatmaply_cor()**.    
+
 ```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
 heatmaply_cor(flow_case_distance_correlations$statistic)
 ```
+
+At this point, we now have a better understanding of how each distance has captured the signal in the data, and how the distances are related to each other. The goal now is to see if we can improve the signal in a single distance or a group of distances. We begin by choosing one promising distance that showed little correlation to other distances and some clear structure when visualized with UMAP. The distance we choose here is **soergel**, and to increase it's signal we will set the **partitions = 10**, which will run the distance 10 times and add 10% noise to each run.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(future)
@@ -155,6 +166,8 @@ flow_case_soergel_dists <- flow_cases %>%
   )
 ```
 
+Now we will transform each of the distances and then fuse them into a single distance. This step is largely trial-and-error to see which transformations increase the signal and structure present in each distance, although the transformations shown here are often well suited for a variety of problems. In addition, being the simplest fusion algorithm, **fusion = fuse** is generally the first fusion option to try.    
+
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_soergel_fusion <- flow_case_soergel_dists %>%
   precise_transform(return_list = TRUE) %>%
@@ -164,6 +177,8 @@ flow_case_soergel_fusion <- flow_case_soergel_dists %>%
   precise_transform(enforce_dist = TRUE) %>%
   precise_fusion(fusion = "fuse")
 ```
+
+Now that we have a single fused soergel distance, we will build a graph.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(future)
@@ -184,6 +199,8 @@ flow_case_soergel_graph <- precise_graph(
 )
 ```
 
+And then visualize it.    
+
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_soergel_2d_plot <- precise_viz(
   data = flow_case_soergel_graph,
@@ -203,7 +220,7 @@ flow_case_soergel_2d_plot <- precise_viz(
 flow_case_soergel_2d_plot <- read_rds(name(file = "flow_case_soergel_2d_plot"))
 ```
 
-```{r layout = "l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+```{r eval = FALSE, include = TRUE}
 flow_case_soergel_2d_plot$visual_output
 ```
 
@@ -211,9 +228,11 @@ flow_case_soergel_2d_plot$visual_output
 library(png)
 library(RCurl)
 library(ggplot2)
-my_image <- readPNG(getURLContent("https://raw.githubusercontent.com/bmuchmore/PreciseDist_Paper/master/images/session_info.png"))
+my_image <- readPNG(getURLContent("https://raw.githubusercontent.com/bmuchmore/PreciseDist_Paper/master/images/soergel_clusters.png"))
 ggplot(data.frame()) + annotation_raster(my_image, -Inf, Inf, -Inf, Inf)
 ```
+
+Clearly, we have now created a graph with obvious structure. Because there are now clearly 6 clusters, we can use the **pamk()** function from the **fpc** package to automatically detect and cluster the 6 clusters we see using the coordinates of the plot as the input data. We do this rather than specifying **k = 6** manually in order to show how we can automate the process of clustering when we have such clear results, which will be useful later.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(fpc)
@@ -243,6 +262,8 @@ flow_case_soergel_clusters <- flow_case_soergel_2d_plot$plot_layout %>%
 flow_case_soergel_clusters <- read_rds(name(file = "flow_case_soergel_clusters"))
 ```
 
+The final step of this initial analysis is to see if the clusters mean anything. Because the clusters are supposed to be a reflection of the flow cytometry data, by mapping each flow cytometry feature onto the clusters we should be able to get a sense of whether our clusters are a valid reflection of the data or if they are just noise.    
+
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 flow_case_soergel_descriptors <- precise_descriptors(
   flow_case_soergel_2d_plot,
@@ -257,6 +278,8 @@ flow_case_soergel_descriptors <- precise_descriptors(
 flow_case_soergel_descriptors <- read_rds(name(file = "flow_case_soergel_descriptors"))
 ```
 
+If one scrolls through the visualization, it will become quickly apparent that we have capture legitimate signal in the data.  
+
 ```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
 precise_trellis(
   data = flow_case_soergel_descriptors, 
@@ -265,6 +288,8 @@ precise_trellis(
   self_contained = TRUE
 )
 ```
+
+Our initial analysis is done, and it is clear we have captured signal in the data. Many questions still remain though, such as which features are driving the clusters, are the clusters correlated with any of the clinical data, and is this the best clustering we can achieve or can we improve upon it? It is this last question we will focus on next.    
 
 
 

@@ -1,8 +1,8 @@
 [
   {
     "path": "posts/cases/",
-    "title": "Cases",
-    "description": "The analysis of the case-only data",
+    "title": "Cases: Distance Calculations and Initial Clusters",
+    "description": "Initial analysis and clustering of the case-only data",
     "author": [
       {
         "name": "Brian Muchmore",
@@ -11,8 +11,10 @@
     ],
     "date": "2018-12-08",
     "categories": [],
-    "preview": {},
-    "last_modified": "2018-12-08T11:43:49-05:00"
+    "preview": "posts/cases/cases_files/figure-html5/unnamed-chunk-19-1.png",
+    "last_modified": "2018-12-08T16:23:49-05:00",
+    "preview_width": 1440,
+    "preview_height": 1440
   },
   {
     "path": "posts/data-setup/",
