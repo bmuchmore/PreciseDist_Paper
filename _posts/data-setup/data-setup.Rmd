@@ -28,8 +28,8 @@ cores <- 16
 
 This is a general purpose naming function that will be used to generate any paths seen below:    
 
-```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-name <- function(path = "/home/brian/Desktop/flow", folder = "", file, type = "rds") {
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+name <- function(path = "/home/brian/Desktop/flow", folder = "cases", file, type = "rds") {
   paste0(path, "/", folder, "/", file, ".", type)
 }
 ```
@@ -38,10 +38,11 @@ name <- function(path = "/home/brian/Desktop/flow", folder = "", file, type = "r
 
 These are the packages I will be using.
 
-```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 library(tidyverse)
 library(missRanger)
 library(recipes)
+library(PreciseDist)
 ```
 
 This is the session info.    
@@ -174,10 +175,62 @@ clinical_numeric_imputed_data <- clinical_transformed_data %>%
   )
 ```
 
-Finally, we recombine the two imputed data-sets for our final clinical data.    
+Now, we recombine the two imputed data-sets for our final clinical data.    
 
 ```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
 clinical_cases <- cbind(clinical_factor_imputed_data, clinical_numeric_imputed_data)
+```
+
+The final step is to inspect what we are left with. First we will look at the distributions of each clinical feature.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_distributions <- precise_distribs(
+  data = clinical_cases,
+  parallel = FALSE, 
+  verbose = FALSE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+library(readr)
+clinical_distributions <- read_rds(name(file = "clinical_distributions"))
+```
+
+**NOTE: This is an interactive visualization. You can also maximized and minimize it by clicking on the juxtaposed arrows in the bottom right hand corner of the vizualization.**    
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = clinical_distributions, 
+  name = "The Distributions of All Clinical Features",
+  path = name(file = "trellis_clinical_distributions"), 
+  self_contained = TRUE
+)
+```
+
+We will also pull out all features which are highly correlated with one another.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+clinical_correlations <- precise_coors(
+  data = clinical_cases, 
+  method = "pearson", 
+  upper = 0.7, 
+  lower = -0.7,
+  parallel = FALSE, 
+  verbose = FALSE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+clinical_correlations <- read_rds(name(file = "clinical_correlations"))
+```
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = clinical_correlations, 
+  name = "Highly Correlated Clinical Features",
+  path = name(file = "trellis_clinical_correlations"), 
+  self_contained = TRUE
+)
 ```
 
 ## Flow Cytometry Data Manipulations    
@@ -219,6 +272,73 @@ flow_cases <- flow_imputed_data %>%
   prep() %>%
   bake(newdata = flow_imputed_data)
 ```
+
+Like we did with the clinical feature, we will now inspect the distributions and correlations of each flow cytometry feature.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_distributions <- precise_distribs(
+  data = flow_cases,
+  parallel = FALSE, 
+  verbose = FALSE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_distributions <- read_rds(name(file = "flow_distributions"))
+```
+
+**NOTE: This is an interactive visualization. You can also maximized and minimize it by clicking on the juxtaposed arrows in the bottom right hand corner of the vizualization.**    
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = flow_distributions, 
+  name = "The Distributions of All Flow Features",
+  path = name(file = "trellis_flow_distributions"), 
+  self_contained = TRUE
+)
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_correlations <- precise_coors(
+  data = flow_cases, 
+  method = "pearson", 
+  upper = 0.7, 
+  lower = -0.7,
+  parallel = FALSE, 
+  verbose = FALSE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_correlations <- read_rds(name(file = "flow_correlations"))
+```
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = flow_correlations, 
+  name = "Highly Correlated Flow Features",
+  path = name(file = "trellis_flow_correlations"), 
+  self_contained = TRUE
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

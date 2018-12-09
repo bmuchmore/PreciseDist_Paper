@@ -5,4 +5,5 @@ listing:
   posts:
     - data-setup
     - cases
+    - cases_deeper
 ---

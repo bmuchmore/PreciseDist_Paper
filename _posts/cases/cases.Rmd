@@ -86,8 +86,6 @@ flow_case_distances <- flow_case_dists %>%
 Now that we have a large list of distances, we can feed each distance as input into the UMAP algorithm.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-library(future)
-library(doFuture)
 options(future.globals.maxSize = +Inf)
 registerDoFuture()
 plan(multicore, workers = 4)
@@ -123,6 +121,50 @@ precise_trellis(
 )
 ```
 
+```{r eval = TRUE, include = FALSE}
+rm(flow_case_umap)
+```
+
+It can be good to view the data without any coloring to get a sense for the structure potentially present and nothing else. In this case, however, we know that PBMCs from the flow cytometry data should correlate with any structure we see. That is, if the UMAP visualization shows patients with a high or low number of PBMCs scattered about instead of adjacent to one another, it is doubtful we can trust that distance to have acurately captured the patterns in the data. So, we run the same UMAP analysis, but we will color each patient with their repective number of PBMCs.    
+
+```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+options(future.globals.maxSize = +Inf)
+registerDoFuture()
+plan(multicore, workers = 4)
+flow_case_pbmc_umap <- precise_umap(
+  data = flow_case_distances,
+  distance = TRUE,
+  n_neighbors = 5,
+  spread = 10,
+  min_dist = 0.1,
+  bandwidth = 1,
+  type = "plotly",
+  color_vec = flow_cases[["pbmc"]],
+  colors = "default",
+  parallel = TRUE,
+  verbose = TRUE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_case_pbmc_umap <- read_rds(name(file = "flow_case_pbmc_umap"))
+```
+
+**NOTE: If the vizualization is not appearing, simply scroll to the next image, and it should now appear.**    
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = flow_case_pbmc_umap, 
+  name = "UMAP of Every Flow Distance Colored by PBMCs",
+  path = name(file = "trellis_flow_case_pbmc_umap"), 
+  self_contained = TRUE
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+rm(flow_case_pbmc_umap)
+```
+
 By scrolling through the various UMAP results, we see that a number of the results look similar, but it is not clear if different distances really are similar or if it just looks that way. To make the results more clear, we will call **precise_correlations()** to create a correlation matrix of distances.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
@@ -148,8 +190,6 @@ heatmaply_cor(flow_case_distance_correlations$statistic)
 At this point, we now have a better understanding of how each distance has captured the signal in the data, and how the distances are related to each other. The goal now is to see if we can improve the signal in a single distance or a group of distances. We begin by choosing one promising distance that showed little correlation to other distances and some clear structure when visualized with UMAP. The distance we choose here is **soergel**, and to increase it's signal we will set the **partitions = 10**, which will run the distance 10 times and add 10% noise to each run.    
 
 ```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
-library(future)
-library(doFuture)
 options(future.globals.maxSize = +Inf)
 registerDoFuture()
 plan(multicore, workers = 5)
@@ -240,7 +280,7 @@ library(purrr)
 library(tibble)
 flow_case_soergel_clusters <- flow_case_soergel_2d_plot$plot_layout %>%
   pamk(
-    krange = 2:20,
+    krange = 3:15,
     criterion = "asw", 
     usepam = TRUE,
     scaling = FALSE, 
@@ -287,6 +327,25 @@ precise_trellis(
   path = name(file = "trellis_flow_case_soergel_descriptors"), 
   self_contained = TRUE
 )
+```
+
+How legitimate is the signal though? We can get a sense for the answer to this question by comparing our **soergel** clusters to clusterings of each flow cytometry feature. The logic is the following: An individual cluster and a clustering as a whole should be representative of the features. If we take PBMCs as an example, we would expect a single cluster to be fairly homogenous with the PBMC values contained within it. In addition, while we would expect the PBMC values to be similar in one cluster, we would expect the average value to be different than another cluster. One way we can measure this is to cluster each flow cytometry feature using an optimcal K-means algorithm and set **k** to the same value as the number of soergel clusters. Thus, because we have 6 **soergel** clusters, we will partition every feature into 6 clusters. We can then use the variation of information distance to see how well the feature clusters overlap with each other and overlap with our **soergel** clusters.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_soergel_vi_distance <- flow_cases %>%
+  cbind(flow_case_soergel_clusters) %>%
+  precise_clust_cors(
+    method = "vi", 
+    bin = "clusters"
+  )
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_soergel_vi_distance <- read_rds(name(file = "flow_soergel_vi_distance"))
+```
+
+```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+heatmaply(flow_soergel_vi_distance$statistic)
 ```
 
 Our initial analysis is done, and it is clear we have captured signal in the data. Many questions still remain though, such as which features are driving the clusters, are the clusters correlated with any of the clinical data, and is this the best clustering we can achieve or can we improve upon it? It is this last question we will focus on next.    

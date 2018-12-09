@@ -1,0 +1,193 @@
+---
+draft: false
+title: "Clustering of Cases Continued"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+description: |
+  A deeper dive into the clustering of the case-only data
+author:
+  - name: "Brian Muchmore"
+    url: https://github.com/bmuchmore
+    affiliation: GENYO
+    affiliation_url: http://www.genyo.es/
+output:
+  radix::radix_article:
+    self_contained: false
+---
+
+### NOTE
+
+Given the same data, the following commands should yield almost identical results to the results being shown with any discrepancies being stochastic in nature. Some of these commands, however, can take a long time to run, so while we show the commands here as we originally ran them, results are often being read back from file. If you are trying to recapitulate these results using the exact data and code being used here and are running into problems or incongruitous results, please submit an [issue](https://github.com/bmuchmore/PreciseDist_Paper/issues), and we will address it as soon as possible.    
+
+## Set-up    
+
+All data analysis was done on a desktop with 8 cores/16 threads (AMD Ryzen 7 1800x) and 32 GB of DDR4 memory. We begin by setting a "cores" variable for future use.    
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+cores <- 8
+```
+
+Next is a general purpose naming function that will be used to generate any paths seen below:    
+
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+name <- function(path = "/home/brian/Desktop/flow", folder = "cases_deeper", file, type = "rds") {
+  paste0(path, "/", folder, "/", file, ".", type)
+}
+```
+
+## Package Information    
+
+These are the packages I will be using.
+
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+library(PreciseDist)
+library(readr)
+library(future)
+library(doFuture)
+library(heatmaply)
+```
+
+This is the session info.    
+
+```{r preview = FALSE, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+sessionInfo()
+```
+
+## Random Forest Distance Calculations    
+
+We have already established that we can get useful results using the **soergel** distance, however, now that we have a formula for good results on this data-set, it is likely other distances can be useful as well. We will begin with 100 random forest distances (10 distances representing 10 different **mtry** settings times 10 partitions for each distance). The code is very similar to the code we used for the **soergel** distances, so it is being lumped together.    
+
+```{r eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+rf_params <- seq(2, round((ncol(flow_cases) * 0.5), 0), length.out = 10) %>% map_dbl(~round(.x, 0))
+rf_funcs <- precise_func_fact(
+  func = "random_forest",
+  params = rf_params
+)
+options(future.globals.maxSize = +Inf)
+registerDoFuture()
+plan(multicore, workers = 5)
+flow_case_rf_dists <- flow_cases %>%
+  as.matrix() %>%
+  precise_dist(
+    dist_funcs = rf_funcs,
+    suffix = "",
+    partitions = 1,
+    file = name(file = "flow_case_rf_dists"),
+    parallel = TRUE,
+    local_timeout = Inf,
+    verbose = TRUE
+  )
+flow_case_rf_fusion <- flow_case_rf_dists %>%
+  precise_transform(return_list = TRUE) %>%
+  precise_transform(enforce_sim = TRUE) %>%
+  precise_transform(fixed_k = 100) %>%
+  precise_transform(transform = "laplacian") %>%
+  precise_transform(enforce_dist = TRUE) %>%
+  precise_fusion(fusion = "fuse")
+options(future.globals.maxSize = +Inf)
+registerDoFuture()
+plan(multicore, workers = 8)
+flow_case_rf_graph <- precise_graph(
+  data = flow_case_rf_fusion,
+  method = 5,
+  distance = FALSE,
+  n_neighbors = 75,
+  spread = 1,
+  min_dist = 0.0,
+  bandwidth = 1,
+  parallel = TRUE,
+  verbose = TRUE
+)
+flow_case_rf_2d_plot <- precise_viz(
+  data = flow_case_rf_graph,
+  plot_type = "drl_2d_plot",
+  k = 50,
+  jitter = 2.5,
+  color_vec = NULL,
+  colors = NULL,
+  size = 0.5,
+  graphml = NULL,
+  html = NULL,
+  verbose = TRUE
+)
+library(fpc)
+library(purrr)
+library(tibble)
+flow_case_rf_clusters <- flow_case_rf_2d_plot$plot_layout %>%
+  pamk(
+    krange = 3:15,
+    criterion = "asw", 
+    usepam = TRUE,
+    scaling = FALSE, 
+    alpha = 0.001, 
+    diss = FALSE,
+    critout = FALSE, 
+    ns = 10, 
+    seed = NULL
+  ) %>%
+  .[[1]] %>%
+  .[["clustering"]] %>%
+  as.character() %>%
+  map_chr(~paste0("cluster_", .x)) %>%
+  as_tibble() %>%
+  select(pam_clusters = value)
+flow_case_rf_descriptors <- precise_descriptors(
+  flow_case_rf_2d_plot,
+  descriptors = cbind(flow_case_rf_clusters, flow_cases),
+  verbose = TRUE,
+  rank = TRUE,
+  size = 0.5
+)
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_case_rf_descriptors <- read_rds(name(file = "flow_case_rf_descriptors"))
+```
+
+```{r layout ="l-page", eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+precise_trellis(
+  data = flow_case_rf_descriptors, 
+  name = "Flow Columns and Cluster Results Mapped to Visual Results of Fused RF Distances",
+  path = name(file = "trellis_flow_case_rf_descriptors"), 
+  self_contained = TRUE
+)
+```
+
+```{r preview = FALSE, eval = FALSE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA, R.options = list(width = 70)}
+flow_rf_vi_distances <- flow_cases %>%
+  cbind(flow_case_rf_clusters) %>%
+  precise_clust_cors(
+    method = "vi", 
+    bin = "clusters"
+  )
+```
+
+```{r eval = TRUE, include = FALSE}
+flow_rf_vi_distances <- read_rds(name(file = "flow_rf_vi_distances"))
+```
+
+```{r layout ="l-page", fig.width = 7.5, fig.height = 7.5, eval = TRUE, include = TRUE, echo = TRUE, warning = FALSE, message = FALSE, comment = NA}
+heatmaply(flow_rf_vi_distances$statistic)
+```
+
+
+
+## Minkowski Distance Calculations    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
